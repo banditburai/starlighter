@@ -31,8 +31,13 @@ jobs:
         uv run ruff format --check
         
     - name: Run tests
+      timeout-minutes: 5
       run: |
-        uv run pytest tests/ -v --tb=short --cov=starlighter --cov-report=term-missing --cov-report=xml
+        # Skip all performance-related tests in CI - they run separately via benchmark runner
+        uv run pytest tests/ -v --tb=short --cov=starlighter --cov-report=term-missing --cov-report=xml \
+          --ignore=tests/test_performance.py \
+          --ignore=tests/test_performance_enhanced.py \
+          -k "not performance and not Performance and not latency and not throughput and not benchmark"
         
     - name: Test examples
       run: |
