@@ -230,7 +230,7 @@ class TestHighlightApiBackwardCompatibility:
         try:
             html = highlight("valid code")
             assert html is not None
-        except (RuntimeError):
+        except RuntimeError:
             # These are acceptable for edge cases
             pass
         except Exception as e:
@@ -386,7 +386,7 @@ def функция():
                 # Should always produce some HTML output
                 assert html.startswith("<pre><code")
                 assert html.endswith("</code></pre>")
-            except (RuntimeError):
+            except RuntimeError:
                 # These are acceptable for severe edge cases
                 pass
             except Exception as e:

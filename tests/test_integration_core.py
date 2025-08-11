@@ -857,7 +857,9 @@ class TestBackwardCompatibilityConfirmation:
             result = CodeBlock("def test(): pass")
             # CodeBlock returns a component object, not a string
             assert result is not None
-            assert hasattr(result, '__call__') or hasattr(result, 'render') or str(result)
+            assert (
+                hasattr(result, "__call__") or hasattr(result, "render") or str(result)
+            )
         except ImportError as e:
             # Expected if no web frameworks installed - this is acceptable
             pytest.skip(f"CodeBlock requires web framework: {e}")
