@@ -234,7 +234,7 @@ class BenchmarkSuite:
 
     def save_baseline(self, filepath: Path = None):
         """Save current results as baseline."""
-        filepath = filepath or Path("baseline.json")
+        filepath = filepath or Path("dev_tools/baseline.json")
         self.benchmark.save_results(filepath)
         print(f"Baseline saved to {filepath}")
 
@@ -248,7 +248,7 @@ class BenchmarkSuite:
         Returns:
             List of regression warnings
         """
-        baseline_file = baseline_file or Path("baseline.json")
+        baseline_file = baseline_file or Path("dev_tools/baseline.json")
 
         if not baseline_file.exists():
             return ["No baseline file found"]
