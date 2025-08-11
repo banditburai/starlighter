@@ -49,3 +49,11 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "examples/*.py" = ["F403", "F405", "E501"]
 "tests/fixtures/*.py" = ["E402", "E731"]
+
+[build-system]
+requires = ["uv_build>=0.8.7,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+source-exclude = ["dev_tools/", "tests/", "examples/"]
