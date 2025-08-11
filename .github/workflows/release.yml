@@ -1,0 +1,195 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build and Validate Package
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is-prerelease: ${{ steps.version.outputs.is-prerelease }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      
+    - name: Set up Python
+      run: uv python install 3.12
+      
+    - name: Install dependencies
+      run: uv sync --all-extras
+      
+    - name: Get version info
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${{ github.ref_name }}"
+        fi
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        
+        # Check if this is a pre-release (contains alpha, beta, rc, dev)
+        if [[ "${VERSION}" =~ (alpha|beta|rc|dev) ]]; then
+          echo "is-prerelease=true" >> $GITHUB_OUTPUT
+        else
+          echo "is-prerelease=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Run quality checks
+      run: |
+        echo "Running linter..."
+        uv run ruff check
+        uv run ruff format --check
+        
+        echo "Running tests..."
+        uv run pytest tests/ -v --cov=starlighter
+        
+        echo "Running performance benchmarks..."
+        uv run python -m dev_tools.benchmark.runner --check-regression --warmup 3 --samples 30
+        
+    - name: Build package
+      run: |
+        echo "Building Starlighter package..."
+        uv build
+        
+    - name: Validate package
+      run: |
+        echo "Validating package contents..."
+        uv run python -m tarfile -l dist/*.tar.gz
+        uv run python -c "
+        import zipfile
+        import sys
+        for f in sys.argv[1:]:
+            if f.endswith('.whl'):
+                with zipfile.ZipFile(f, 'r') as z:
+                    files = z.namelist()
+                    print(f'Wheel contents ({len(files)} files):')
+                    for file in sorted(files)[:20]:  # Show first 20 files
+                        print(f'  {file}')
+                    if len(files) > 20:
+                        print(f'  ... and {len(files) - 20} more files')
+        " dist/*.whl
+        
+        # Check that only the core package is included (no dev_tools, tests, examples)
+        uv run python -c "
+        import zipfile
+        import sys
+        for f in sys.argv[1:]:
+            if f.endswith('.whl'):
+                with zipfile.ZipFile(f, 'r') as z:
+                    files = z.namelist()
+                    invalid_files = [f for f in files if any(x in f for x in ['dev_tools/', 'tests/', 'examples/'])]
+                    if invalid_files:
+                        print('ERROR: Package contains development files:')
+                        for f in invalid_files:
+                            print(f'  {f}')
+                        sys.exit(1)
+                    print('✅ Package validation passed - only core starlighter files included')
+        " dist/*.whl
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    environment: testpypi
+    permissions:
+      id-token: write
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+        
+    - name: Publish to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    environment: pypi
+    permissions:
+      id-token: write
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+        
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build, publish-pypi]
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Generate changelog
+      id: changelog
+      run: |
+        echo "## What's Changed" > changelog.md
+        echo "" >> changelog.md
+        
+        # Get commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          echo "Changes since $LAST_TAG:" >> changelog.md
+          git log --pretty=format:"- %s (%an)" ${LAST_TAG}..HEAD >> changelog.md
+        else
+          echo "- Initial release of Starlighter v2" >> changelog.md
+          echo "- High-performance Python syntax highlighter" >> changelog.md
+          echo "- FastHTML/StarHTML integration support" >> changelog.md
+          echo "- DataStar attribute highlighting" >> changelog.md
+        fi
+        
+        echo "" >> changelog.md
+        echo "## Performance" >> changelog.md
+        echo "- P99 latency: <5ms for 500-line files" >> changelog.md
+        echo "- Package size: ~29KB" >> changelog.md
+        echo "- Zero dependencies" >> changelog.md
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: false
+        prerelease: ${{ needs.build.outputs.is-prerelease }}
+        body_path: changelog.md
+        files: |
+          dist/*

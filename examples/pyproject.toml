@@ -1,0 +1,22 @@
+[project]
+name = "starlighter-examples"
+version = "0.1.0"
+description = "Example applications showcasing Starlighter syntax highlighting"
+requires-python = ">=3.12"
+dependencies = [
+    "python-fasthtml>=0.12.24",
+    "starhtml>=0.1.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]

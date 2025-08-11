@@ -1,0 +1,254 @@
+name: Update Demo Examples
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Starlighter version to update to (leave empty for latest)'
+        required: false
+        type: string
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
+
+jobs:
+  update-demo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      
+    - name: Set up Python
+      run: uv python install 3.12
+      
+    - name: Configure Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+    - name: Determine target version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          TARGET_VERSION="${{ github.event.inputs.version }}"
+          echo "Using manually specified version: $TARGET_VERSION"
+        else
+          echo "Fetching latest version from PyPI..."
+          TARGET_VERSION=$(curl -s https://pypi.org/pypi/starlighter/json | python3 -c "import sys, json; print(json.load(sys.stdin)['info']['version'])")
+          echo "Latest PyPI version: $TARGET_VERSION"
+        fi
+        
+        # Verify version exists on PyPI
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/starlighter/$TARGET_VERSION/json")
+        if [ "$HTTP_CODE" != "200" ]; then
+          echo "Error: Version $TARGET_VERSION not found on PyPI"
+          exit 1
+        fi
+        
+        echo "target_version=$TARGET_VERSION" >> $GITHUB_OUTPUT
+        echo "✅ Confirmed version $TARGET_VERSION exists on PyPI"
+        
+    - name: Update FastHTML integration example
+      run: |
+        cd examples/
+        
+        # Check if we need to create pyproject.toml for the FastHTML example
+        if [ ! -f fasthtml_example_project/pyproject.toml ]; then
+          mkdir -p fasthtml_example_project
+          cd fasthtml_example_project
+          
+          # Create a proper uv project for the FastHTML example
+          cat > pyproject.toml << EOF
+        [project]
+        name = "starlighter-fasthtml-demo"
+        version = "0.1.0"
+        description = "Starlighter FastHTML Integration Demo"
+        requires-python = ">=3.11"
+        dependencies = [
+            "fasthtml>=0.6.9",
+            "starlighter==${{ steps.version.outputs.target_version }}"
+        ]
+        
+        [dependency-groups]
+        dev = ["uvicorn>=0.22.0"]
+        EOF
+          
+          # Copy the integration example
+          cp ../fasthtml_integration.py app.py
+          
+          echo "✅ Created FastHTML demo project"
+        else
+          cd fasthtml_example_project
+          
+          # Update existing pyproject.toml
+          sed -i 's/starlighter==.*/starlighter==${{ steps.version.outputs.target_version }}",/' pyproject.toml
+          echo "✅ Updated FastHTML demo dependencies"
+        fi
+        
+        # Generate lock file
+        uv sync
+        echo "✅ Generated uv.lock for FastHTML demo"
+        
+    - name: Update StarHTML integration example  
+      run: |
+        cd examples/
+        
+        # Check if we need to create pyproject.toml for the StarHTML example
+        if [ ! -f starhtml_example_project/pyproject.toml ]; then
+          mkdir -p starhtml_example_project
+          cd starhtml_example_project
+          
+          # Create a proper uv project for the StarHTML example
+          cat > pyproject.toml << EOF
+        [project]
+        name = "starlighter-starhtml-demo"
+        version = "0.1.0"
+        description = "Starlighter StarHTML Integration Demo"
+        requires-python = ">=3.11"
+        dependencies = [
+            "starhtml>=0.2.0",
+            "starlighter==${{ steps.version.outputs.target_version }}"
+        ]
+        
+        [dependency-groups]
+        dev = ["uvicorn>=0.22.0"]
+        EOF
+          
+          # Copy the integration example
+          cp ../starhtml_integration.py app.py
+          
+          echo "✅ Created StarHTML demo project"
+        else
+          cd starhtml_example_project
+          
+          # Update existing pyproject.toml
+          sed -i 's/starlighter==.*/starlighter==${{ steps.version.outputs.target_version }}",/' pyproject.toml
+          echo "✅ Updated StarHTML demo dependencies"
+        fi
+        
+        # Generate lock file
+        uv sync
+        echo "✅ Generated uv.lock for StarHTML demo"
+        
+    - name: Create deployment README
+      run: |
+        cat > examples/DEPLOYMENT.md << EOF
+        # Starlighter Demo Deployment
+        
+        This directory contains deployable demo projects showcasing Starlighter integration.
+        
+        ## Projects
+        
+        ### FastHTML Demo (\`fasthtml_example_project/\`)
+        - **Package Version**: \`starlighter==${{ steps.version.outputs.target_version }}\`
+        - **Run**: \`cd fasthtml_example_project && uv run uvicorn app:app --reload\`
+        - **URL**: http://localhost:8000
+        
+        ### StarHTML Demo (\`starhtml_example_project/\`)  
+        - **Package Version**: \`starlighter==${{ steps.version.outputs.target_version }}\`
+        - **Run**: \`cd starhtml_example_project && uv run python app.py\`
+        - **URL**: http://localhost:5002
+        
+        ## Dokploy Deployment
+        
+        Each project directory contains:
+        - \`pyproject.toml\` - Project dependencies with pinned starlighter version
+        - \`uv.lock\` - Exact dependency lock file
+        - \`app.py\` - Main application file
+        
+        Deploy by:
+        1. Upload project directory to your Dokploy VPS
+        2. Run \`uv sync\` to install dependencies
+        3. Start the application with the run command above
+        
+        ## Latest Update
+        - **Updated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        - **Starlighter Version**: ${{ steps.version.outputs.target_version }}
+        - **Trigger**: ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Auto (Release)' }}
+        EOF
+        
+        echo "✅ Created deployment documentation"
+        
+    - name: Validate demo projects
+      run: |
+        echo "🔍 Validating demo projects..."
+        
+        # Test FastHTML demo
+        cd examples/fasthtml_example_project/
+        echo "Testing FastHTML demo import..."
+        uv run python -c "
+        import starlighter
+        print(f'✅ FastHTML demo: starlighter v{starlighter.__version__}')
+        
+        # Test basic functionality
+        html = starlighter.highlight('def hello(): return \"world\"', 'python')
+        assert '<pre><code' in html
+        print('✅ FastHTML demo: Basic highlighting works')
+        
+        # Test CodeBlock function
+        from starlighter import CodeBlock
+        block = CodeBlock('x = 42', theme='github-dark')
+        assert 'github-dark' in str(block)
+        print('✅ FastHTML demo: CodeBlock function works')
+        "
+        
+        # Test StarHTML demo
+        cd ../starhtml_example_project/
+        echo "Testing StarHTML demo import..."
+        uv run python -c "
+        import starlighter
+        print(f'✅ StarHTML demo: starlighter v{starlighter.__version__}')
+        
+        # Test basic functionality
+        html = starlighter.highlight('def hello(): return \"world\"', 'python')
+        assert '<pre><code' in html
+        print('✅ StarHTML demo: Basic highlighting works')
+        "
+        
+        echo "🎉 All demo projects validated successfully!"
+        
+    - name: Commit and push changes
+      run: |
+        git add examples/
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🚀 Update demo examples to starlighter ${{ steps.version.outputs.target_version }}
+
+        - Updated FastHTML demo project dependencies
+        - Updated StarHTML demo project dependencies  
+        - Regenerated uv.lock files for reproducible deployments
+        - Updated deployment documentation
+        
+        Ready for Dokploy VPS deployment."
+          
+          git push origin main
+          echo "✅ Pushed demo updates to repository"
+        fi
+        
+    - name: Summary
+      run: |
+        echo "🎉 Demo update completed successfully!"
+        echo ""
+        echo "📦 Updated to: starlighter==${{ steps.version.outputs.target_version }}"
+        echo "🔄 Trigger: ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Automatic (after release)' }}"
+        echo ""
+        echo "📁 Updated Projects:"
+        echo "   - examples/fasthtml_example_project/ (FastHTML integration)"
+        echo "   - examples/starhtml_example_project/ (StarHTML integration)"
+        echo ""
+        echo "🚀 Next Steps:"
+        echo "   1. Deploy to your Dokploy VPS"
+        echo "   2. Run 'uv sync' in each project directory"
+        echo "   3. Start the applications as documented in examples/DEPLOYMENT.md"

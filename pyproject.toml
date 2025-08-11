@@ -1,0 +1,51 @@
+[project]
+name = "starlighter"
+version = "0.1.0"
+description = "Ultra-fast Python syntax highlighter for FastHTML/StarHTML with Datastar support"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+authors = [
+    { name = "firefly", email = "promptsiren@gmail.com" }
+]
+license = "Apache-2.0"
+keywords = ["syntax", "highlighting", "fasthtml", "starhtml", "datastar", "python"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: HTML",
+]
+
+[project.urls]
+Homepage = "https://github.com/banditburai/starlighter"
+Repository = "https://github.com/banditburai/starlighter"
+Documentation = "https://github.com/banditburai/starlighter/blob/main/README.md"
+Issues = "https://github.com/banditburai/starlighter/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "python-fasthtml>=0.12.24",
+    "ruff>=0.8.0",
+    "starhtml>=0.1.4",
+]
+
+[tool.ruff]
+extend-exclude = ["examples/", "tests/fixtures/"]
+
+[tool.ruff.lint]
+ignore = [
+    "F403",  # Allow star imports in examples  
+    "F405",  # Allow undefined names from star imports in examples
+    "E501",  # Allow long lines in examples
+    "E402",  # Allow imports not at top in examples/fixtures
+    "E731",  # Allow lambda assignments in fixtures
+]
+
+[tool.ruff.lint.per-file-ignores]
+"examples/*.py" = ["F403", "F405", "E501"]
+"tests/fixtures/*.py" = ["E402", "E731"]
