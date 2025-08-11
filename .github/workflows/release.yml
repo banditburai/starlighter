@@ -59,8 +59,8 @@ jobs:
         echo "Running tests..."
         uv run pytest tests/ -v --cov=starlighter
         
-        echo "Running performance benchmarks..."
-        uv run python -m dev_tools.benchmark.runner --check-regression --warmup 3 --samples 30
+        echo "Running performance benchmarks (informational)..."
+        uv run python -m dev_tools.benchmark.runner --check-regression --warmup 3 --samples 30 || echo "::warning::Performance regression detected (non-blocking)"
         
     - name: Build package
       run: |

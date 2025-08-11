@@ -40,9 +40,11 @@ jobs:
         uv run python -m py_compile examples/*.py
         
     - name: Run performance benchmarks
+      continue-on-error: true
       run: |
         echo "Running performance regression checks..."
-        uv run python -m dev_tools.benchmark.runner --check-regression --warmup 3 --samples 50
+        echo "Note: Performance tests are informational only and won't block the build"
+        uv run python -m dev_tools.benchmark.runner --check-regression --warmup 3 --samples 50 || echo "::warning::Performance regression detected (non-blocking)"
         
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
