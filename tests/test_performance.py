@@ -384,8 +384,13 @@ class HotPathValidationTests(PerformanceTestCase):
 
         # Character advancement should be very fast (allow more time in CI)
         import os
-        threshold = 0.020 if os.getenv('CI') else 0.010  # 20ms in CI, 10ms locally
-        self.assertLess(duration, threshold, f"Character advancement should be under {threshold*1000:.0f}ms")
+
+        threshold = 0.020 if os.getenv("CI") else 0.010  # 20ms in CI, 10ms locally
+        self.assertLess(
+            duration,
+            threshold,
+            f"Character advancement should be under {threshold * 1000:.0f}ms",
+        )
 
     def test_simple_snippet_throughput(self):
         """Throughput check using public API only."""
