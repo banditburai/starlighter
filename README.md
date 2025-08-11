@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://python.org)
 [![PyPI Version](https://img.shields.io/pypi/v/starlighter.svg)](https://pypi.org/project/starlighter/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-red.svg)]()
 
 **Starlighter** is a high-performance, zero-dependency Python syntax highlighter designed for server-side rendering. Built specifically for **StarHTML applications** with full FastHTML compatibility for legacy projects.
@@ -64,7 +64,7 @@ highlighted_html = highlight(code)
 
 ## 🌟 StarHTML Integration
 
-Starlighter is designed specifically for [StarHTML](https://github.com/banditburai/starHTML) with DataStar support:
+Starlighter is designed specifically for [StarHTML](https://github.com/banditburai/starHTML) with Datastar support:
 
 ```python
 from starhtml import *
@@ -281,16 +281,9 @@ cd examples/fasthtml_example_project/
 uv run uvicorn app:app --reload
 ```
 
-## 🗺️ Roadmap
-
-- **v2.1**: Enhanced DataStar attribute highlighting for StarHTML
-- **v2.2**: Additional language support (JavaScript, TypeScript)
-- **v2.3**: Advanced theme customization API
-- **v2.4**: Streaming support for very large files
-
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+Apache License 2.0 - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
