@@ -276,20 +276,7 @@ uv run ruff format --check
 cd examples/starhtml_example_project/
 uv run python app.py
 
-# FastHTML example (compatibility)  
-cd examples/fasthtml_example_project/
-uv run uvicorn app:app --reload
 ```
-
-## 📄 License
-
-Apache License 2.0 - see [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Inspired by [Pygments](https://pygments.org/) for comprehensive syntax highlighting
-- Built for the [StarHTML](https://github.com/banditburai/starHTML) ecosystem with FastHTML compatibility
-- Performance optimizations using Python's built-in `tokenize` module
 
 ## 🔗 Links
 

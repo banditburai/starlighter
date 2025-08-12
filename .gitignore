@@ -58,3 +58,4 @@ venv.bak/
 .DS_Store
 
 .ruff_cache
+.sesskey
