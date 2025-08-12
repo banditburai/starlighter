@@ -3,7 +3,6 @@ import time
 from fastcore.xml import to_xml
 from starhtml import *
 from starlighter import CodeBlock, StarlighterStyles
-from starlighter import InputError, ParseError, RenderError
 
 # Create StarHTML app with Starlighter styles
 app, rt = star_app(

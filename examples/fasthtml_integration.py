@@ -593,7 +593,7 @@ async def post(code: str = ""):
             # Extract just the inner HTML content
             highlighted_html = to_xml(highlighted_elem)
 
-        except (InputError, ParseError, RenderError) as e:
+        except (ValueError, RuntimeError) as e:
             return Div(
                 P(
                     f"Highlighting failed: {str(e)}",
