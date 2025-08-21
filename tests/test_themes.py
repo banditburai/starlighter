@@ -28,8 +28,8 @@ class TestThemeCSS:
         assert ".token-builtin" in css
         assert ".token-number" in css
 
-        # Should have GitHub Dark theme by default
-        assert "GitHub Dark" in css or "github-dark" in css
+        # Should have GitHub Dark theme colors by default
+        assert "#0d1117" in css  # GitHub Dark background color
 
     def test_get_specific_theme(self):
         """Test getting specific theme CSS."""
@@ -70,18 +70,7 @@ class TestThemeCSS:
         assert ".token-keyword" in css
         assert ".token-string" in css
 
-    def test_get_all_themes(self):
-        """Test getting all themes with 'all' parameter."""
-        css = get_theme_css("all")
-
-        # Should contain all theme variations (except github-dark which is default)
-        assert "theme-monokai" in css
-        assert "theme-dracula" in css
-        assert "theme-vscode" in css
-        # github-dark is the default, doesn't have a theme- prefix
-
-        # Should be comprehensive CSS
-        assert len(css) > 5000  # All themes combined should be substantial
+    # Removed test_get_all_themes - "all" parameter is legacy behavior not in clean API
 
 
 class TestStarlighterStyles:
@@ -136,11 +125,13 @@ class TestThemeData:
             assert " " not in theme_name  # No spaces
             assert theme_name.replace("-", "").replace("_", "").isalnum()
 
-    def test_theme_descriptions(self):
-        """Test theme descriptions are present."""
-        for theme_name, description in THEMES.items():
-            assert isinstance(description, str)
-            assert len(description) > 0
+    def test_theme_definitions(self):
+        """Test theme definitions are present and valid."""
+        for theme_name, theme_def in THEMES.items():
+            assert isinstance(theme_def, dict)
+            # Each theme should define required CSS variables
+            assert "--code-bg" in theme_def
+            assert "--token-keyword" in theme_def
 
 
 class TestThemeIntegration:
@@ -251,29 +242,9 @@ class TestEdgeCases:
 class TestCoverage:
     """Tests to improve coverage of untested code paths."""
 
-    def test_build_all_css(self):
-        """Test that all CSS is built correctly."""
-        # This is tested indirectly through get_theme_css('all')
-        all_css = get_theme_css("all")
+    # Removed test_build_all_css - "all" parameter is legacy behavior not in clean API
 
-        # Should contain CSS for all themes
-        for theme_name in THEMES.keys():
-            if theme_name != "github-dark":  # Default theme doesn't have theme- prefix
-                assert f"theme-{theme_name}" in all_css
-
-    def test_theme_css_map_structure(self):
-        """Test internal theme CSS map structure."""
-        # Import to check constants
-        from starlighter.themes import THEME_CSS_MAP, BASE_CSS
-
-        assert isinstance(THEME_CSS_MAP, dict)
-        assert isinstance(BASE_CSS, str)
-
-        # All themes should be in the map
-        for theme_name in THEMES.keys():
-            assert theme_name in THEME_CSS_MAP
-            assert isinstance(THEME_CSS_MAP[theme_name], str)
-            assert len(THEME_CSS_MAP[theme_name]) > 0
+    # Removed test_theme_css_map_structure - testing internal implementation details
 
 
 if __name__ == "__main__":
