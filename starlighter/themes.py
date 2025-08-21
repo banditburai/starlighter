@@ -169,78 +169,56 @@ THEMES = {
 }
 
 
-def css_vars(theme_dict):
-    """Convert theme dictionary to CSS variable declarations."""
-    return "\n    ".join(f"{k}: {v};" for k, v in theme_dict.items())
+def _css_vars(d):
+    return "\n    ".join(f"{k}: {v};" for k, v in d.items())
+
+
+def _wrap_vars(selector, theme):
+    return f"{selector} {{\n    {_css_vars(THEMES[theme])}\n}}"
 
 
 def get_theme_css(theme="github-dark"):
-    """Get CSS with theme variables set."""
     if theme not in THEMES:
         raise ValueError(
             f"Unknown theme '{theme}'. Available themes: {list(THEMES.keys())}"
         )
-    return f"{BASE_CSS}\n\n:root {{\n    {css_vars(THEMES[theme])}\n}}"
+    return f"{BASE_CSS}\n\n{_wrap_vars(':root', theme)}"
 
 
 def StarlighterStyles(*themes, auto_switch=False, **kwargs):
-    """Generate a Style element with theme CSS."""
     themes = themes or ("github-dark",)
-    css_parts = [BASE_CSS]
+    default, light = themes[0], "light" if "light" in themes else None
 
-    # Default theme
-    default_theme = themes[0]
-    if default_theme in THEMES:
-        css_parts.append(f":root {{\n    {css_vars(THEMES[default_theme])}\n}}")
+    css = [BASE_CSS, _wrap_vars(":root", default)]
 
-    # Auto-switching between dark and light
-    if auto_switch and "light" in themes:
-        css_parts.append(f"""
-@media (prefers-color-scheme: light) {{
-    :root {{
-        {css_vars(THEMES["light"])}
-    }}
-}}
+    if auto_switch and light:
+        css.extend(
+            [
+                f"@media (prefers-color-scheme: light) {{\n    {_wrap_vars(':root', light)}\n}}",
+                *[
+                    _wrap_vars(sel, default)
+                    for sel in [
+                        "[data-theme='dark']",
+                        ".dark",
+                        ":root.dark",
+                        "html.dark",
+                    ]
+                ],
+                *[
+                    _wrap_vars(sel, light)
+                    for sel in [
+                        "[data-theme='light']",
+                        ".light",
+                        ":root.light",
+                        "html.light",
+                    ]
+                ],
+            ]
+        )
 
-/* Manual overrides via data-theme attribute */
-[data-theme="dark"] {{
-    {css_vars(THEMES[default_theme])}
-}}
-
-[data-theme="light"] {{
-    {css_vars(THEMES["light"])}
-}}
-
-/* Manual overrides via class (Tailwind-style) */
-.dark {{
-    {css_vars(THEMES[default_theme])}
-}}
-
-.light {{
-    {css_vars(THEMES["light"])}
-}}
-
-/* Higher specificity for nested class patterns */
-:root.dark {{
-    {css_vars(THEMES[default_theme])}
-}}
-
-:root.light {{
-    {css_vars(THEMES["light"])}
-}}
-
-html.dark {{
-    {css_vars(THEMES[default_theme])}
-}}
-
-html.light {{
-    {css_vars(THEMES["light"])}
-}}""")
-
-    # Additional theme classes for manual switching
-    for theme in themes:
-        if theme in THEMES and theme != default_theme:
-            css_parts.append(f".theme-{theme} {{\n    {css_vars(THEMES[theme])}\n}}")
+    css.extend(
+        _wrap_vars(f".theme-{t}", t) for t in themes if t != default and t in THEMES
+    )
 
     try:
         from starhtml.tags import Style
@@ -248,9 +226,9 @@ html.light {{
         try:
             from fasthtml.common import Style
         except ImportError:
-            return "\n".join(css_parts)
+            return "\n\n".join(css)
 
-    return Style("\n".join(css_parts), **kwargs)
+    return Style("\n\n".join(css), **kwargs)
 
 
 __all__ = ["BASE_CSS", "THEMES", "get_theme_css", "StarlighterStyles"]
