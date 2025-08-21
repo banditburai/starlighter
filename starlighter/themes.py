@@ -202,11 +202,38 @@ def StarlighterStyles(*themes, auto_switch=False, **kwargs):
     }}
 }}
 
+/* Manual overrides via data-theme attribute */
 [data-theme="dark"] {{
     {css_vars(THEMES[default_theme])}
 }}
 
 [data-theme="light"] {{
+    {css_vars(THEMES["light"])}
+}}
+
+/* Manual overrides via class (Tailwind-style) */
+.dark {{
+    {css_vars(THEMES[default_theme])}
+}}
+
+.light {{
+    {css_vars(THEMES["light"])}
+}}
+
+/* Higher specificity for nested class patterns */
+:root.dark {{
+    {css_vars(THEMES[default_theme])}
+}}
+
+:root.light {{
+    {css_vars(THEMES["light"])}
+}}
+
+html.dark {{
+    {css_vars(THEMES[default_theme])}
+}}
+
+html.light {{
     {css_vars(THEMES["light"])}
 }}""")
 
