@@ -326,16 +326,39 @@ def StarlighterStyles(*themes, auto_switch: bool = False, **kwargs):
 
         if dark_theme in THEME_CSS_MAP:
             dark_css = THEME_CSS_MAP[dark_theme]
-            css_parts.append(
-                f"""@media (prefers-color-scheme: dark) {{{dark_css}}}
-[data-theme="dark"] .code-container {{{dark_css}}}"""
-            )
+            # Dark theme is already added in the main themes loop,
+            # just add media query for explicit dark preference
+            css_parts.append(f"""
+/* Dark theme for system preference */
+@media (prefers-color-scheme: dark) {{
+    {dark_css}
+}}""")
+
         if light_theme and light_theme in THEME_CSS_MAP:
             light_css = THEME_CSS_MAP[light_theme]
-            css_parts.append(
-                f"""@media (prefers-color-scheme: light) {{{light_css}}}
-[data-theme="light"] .code-container {{{light_css}}}"""
-            )
+            # Add light theme with proper media query
+            css_parts.append(f"""
+/* Light theme for system preference */
+@media (prefers-color-scheme: light) {{
+    {light_css}
+}}
+
+/* Light theme for explicit data-theme */
+[data-theme="light"] .code-container {{
+    background: #ffffff !important;
+    color: #333;
+    border-color: #e1e8ed;
+}}
+
+[data-theme="light"] .token-keyword {{ color: #0000ff; }}
+[data-theme="light"] .token-string {{ color: #a31515; }}
+[data-theme="light"] .token-comment {{ color: #008000; font-style: italic; }}
+[data-theme="light"] .token-number {{ color: #098658; }}
+[data-theme="light"] .token-operator {{ color: #000000; }}
+[data-theme="light"] .token-identifier {{ color: #001080; }}
+[data-theme="light"] .token-builtin {{ color: #267f99; }}
+[data-theme="light"] .token-decorator {{ color: #795e26; }}
+[data-theme="light"] .token-punctuation {{ color: #000000; }}""")
 
     return _style_element("\n".join(css_parts), **kwargs)
 
