@@ -355,14 +355,9 @@ THEMES = {
     },
 }
 
-SELECTORS = [
+DARK_SELECTORS = [
     ".dark",
     "[data-theme='dark']",
-    "html[data-theme='dark']",
-    ".theme-dark",
-    "[data-theme='light']",
-    "html[data-theme='light']",
-    ".theme-light",
 ]
 
 
@@ -394,7 +389,7 @@ def StarlighterStyles(*themes, auto_switch=False, **kwargs):
 
     css = [BASE_CSS, _wrap_vars(":root", default)]
     if auto_switch and alt:
-        css.extend(_wrap_vars(sel, alt) for sel in SELECTORS)
+        css.extend(_wrap_vars(sel, alt) for sel in DARK_SELECTORS)
 
     try:
         from starhtml.tags import Style
