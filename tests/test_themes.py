@@ -106,36 +106,38 @@ class TestStarlighterStyles:
     def test_auto_switch_theme_assignment_fix(self):
         """Test fix for incorrect light theme selector assignment."""
         try:
-            styles = StarlighterStyles('github-light', 'github-dark', auto_switch=True)
+            styles = StarlighterStyles("github-light", "github-dark", auto_switch=True)
             css = str(styles)
-            
+
             # Strip style tags if present
-            if css.startswith('<style>') and css.endswith('</style>'):
+            if css.startswith("<style>") and css.endswith("</style>"):
                 css = css[7:-8]
-            
+
             # Helper function to extract background color
             def get_bg_color(selector_pattern):
-                match = re.search(f'{selector_pattern}\\s*{{([^}}]+)}}', css)
+                match = re.search(f"{selector_pattern}\\s*{{([^}}]+)}}", css)
                 if match:
                     content = match.group(1)
-                    bg_match = re.search(r'--code-bg:\s*([^;]+);', content)
+                    bg_match = re.search(r"--code-bg:\s*([^;]+);", content)
                     return bg_match.group(1).strip() if bg_match else None
                 return None
-            
+
             # Test correct theme assignments
-            assert get_bg_color(':root') == '#ffffff'  # Light theme in root
-            assert get_bg_color(r'\.dark') == '#0d1117'  # Dark theme in .dark
-            assert get_bg_color(r"\[data-theme='dark'\]") == '#0d1117'  # Dark theme in data attribute
-            
+            assert get_bg_color(":root") == "#ffffff"  # Light theme in root
+            assert get_bg_color(r"\.dark") == "#0d1117"  # Dark theme in .dark
+            assert (
+                get_bg_color(r"\[data-theme='dark'\]") == "#0d1117"
+            )  # Dark theme in data attribute
+
             # Test that redundant light theme selectors are removed
             assert "[data-theme='light']" not in css
             assert "html[data-theme='light']" not in css
             assert ".theme-light" not in css
-            
+
             # Test that excessive dark selectors are removed
             assert "html[data-theme='dark']" not in css
             assert ".theme-dark" not in css
-            
+
         except ImportError:
             pytest.skip("Framework not available")
 
