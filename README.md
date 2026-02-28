@@ -5,23 +5,18 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-red.svg)]()
 
-**Starlighter** is a high-performance, zero-dependency Python syntax highlighter designed for server-side rendering. Built specifically for **StarHTML applications** with full FastHTML compatibility for legacy projects.
+Server-side Python syntax highlighter with zero dependencies. Built for [StarHTML](https://github.com/banditburai/starHTML) with Datastar-aware tokenization, and compatible with FastHTML.
 
-## ✨ Key Features
+## Features
 
-- ⚡ **Blazing Fast**: ~3ms P99 latency for 500-line files, ~1.5ms for 200-line files
-- 🔒 **XSS-Safe**: Secure HTML output with proper entity encoding  
-- 📦 **Zero Dependencies**: Pure Python standard library implementation
-- 🎨 **Multiple Themes**: Built-in themes (VS Code Dark/Light, GitHub Dark, Monokai, Catppuccin, Dracula)
-- 🌟 **StarHTML Native**: Built for StarHTML with Datastar attribute highlighting
-- 🔄 **FastHTML Compatible**: Full backward compatibility for FastHTML projects
-- 🐍 **Complete Python Support**: All Python 3.11+ syntax elements
-- 📱 **Mobile Responsive**: Optimized CSS for all screen sizes
-- ♿ **Accessible**: WCAG compliant with high contrast mode support
+- **Fast**: ~1.5ms P99 for 200-line files, ~3ms for 500-line files
+- **XSS-safe**: All output is entity-encoded
+- **Zero dependencies**: Pure Python standard library
+- **17 built-in themes**: GitHub, VS Code, Monokai, Catppuccin, Dracula, Nord, Solarized, One Dark, Xcode (dark + light variants)
+- **StarHTML-aware**: Distinct token classes for HTML elements, Datastar attributes, signals, and CSS class/style strings
+- **FastHTML compatible**: Works with both StarHTML and FastHTML projects
 
-## 🚀 Quick Start
-
-### Installation
+## Installation
 
 ```bash
 # Using uv (recommended)
@@ -31,40 +26,54 @@ uv add starlighter
 pip install starlighter
 ```
 
-### Basic Usage
+## Usage
+
+### Basic highlighting
 
 ```python
 from starlighter import highlight
 
-# Highlight Python code
 code = '''def fibonacci(n):
-    """Calculate the nth Fibonacci number."""
     if n <= 1:
         return n
     return fibonacci(n-1) + fibonacci(n-2)
 
-print(f"The 10th Fibonacci number is: {fibonacci(10)}")'''
+print(fibonacci(10))'''
 
-# Generate highlighted HTML
-highlighted_html = highlight(code)
+html = highlight(code)
 ```
 
-**Output:**
-```html
-<pre><code class="language-python">
-<span class="token-keyword">def</span> <span class="token-identifier">fibonacci</span>(<span class="token-identifier">n</span>):
-    <span class="token-comment">"""Calculate the nth Fibonacci number."""</span>
-    <span class="token-keyword">if</span> <span class="token-identifier">n</span> <span class="token-operator">&lt;=</span> <span class="token-number">1</span>:
-        <span class="token-keyword">return</span> <span class="token-identifier">n</span>
-    <span class="token-keyword">return</span> <span class="token-identifier">fibonacci</span>(<span class="token-identifier">n</span><span class="token-operator">-</span><span class="token-number">1</span>) <span class="token-operator">+</span> <span class="token-identifier">fibonacci</span>(<span class="token-identifier">n</span><span class="token-operator">-</span><span class="token-number">2</span>)
+### StarHTML-aware highlighting
 
-<span class="token-builtin">print</span>(<span class="token-string">f"The 10th Fibonacci number is: {fibonacci(10)}"</span>)
-</code></pre>
+The lexer recognizes StarHTML elements, Datastar attributes, and signal references, giving each a distinct token class:
+
+```python
+from starlighter import highlight
+
+code = '''Button(
+    "Increment",
+    data_on_click=count.add(1),
+    cls="px-4 py-2 bg-blue-500"
+)'''
+
+html = highlight(code)
+# Button  -> token-starhtml-element
+# data_on_click -> token-datastar-attr
+# cls string    -> token-css-class
 ```
 
-## 🌟 StarHTML Integration
+You can also register custom elements, attributes, and signal names:
 
-Starlighter is designed specifically for [StarHTML](https://github.com/banditburai/starHTML) with Datastar support:
+```python
+html = highlight(
+    code,
+    elements={"MyWidget", "AppShell"},
+    attrs={"custom_bind"},
+    signals={"count", "message"},
+)
+```
+
+### With StarHTML
 
 ```python
 from starhtml import *
@@ -72,46 +81,25 @@ from starlighter import CodeBlock, StarlighterStyles
 
 app, rt = star_app(
     hdrs=(
-        # Include all Starlighter themes
-        StarlighterStyles(
-            "github-dark", "vscode", "light", "monokai", "catppuccin", "dracula"
-        ),
-        Style("""
-            .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-            .code-example { margin: 2rem 0; }
-        """)
+        StarlighterStyles("github-dark", "monokai", "dracula"),
     )
 )
 
 @rt("/")
 def home():
-    code_sample = '''@dataclass
-class User:
-    """A user with DataStar reactivity."""
-    name: str
-    email: str
-    active: bool = True
-    
-    def greet(self) -> str:
-        return f"Hello from StarHTML, I'm {self.name}!"'''
-    
+    sample = '''def greet(name: str) -> str:
+    return f"Hello, {name}!"'''
+
     return Div(
-        H1("🌟 StarHTML + Starlighter"),
-        P("Server-side Python syntax highlighting with DataStar support"),
-        Div(
-            H3("Interactive Code Example:"),
-            CodeBlock(code_sample, theme="github-dark"),
-            cls="code-example"
-        ),
+        H1("Code Preview"),
+        CodeBlock(sample, theme="github-dark"),
         cls="container"
     )
 
 serve()
 ```
 
-## 🔄 FastHTML Compatibility
-
-For projects using FastHTML, Starlighter provides full backward compatibility:
+### With FastHTML
 
 ```python
 from fasthtml.common import *
@@ -119,171 +107,109 @@ from starlighter import CodeBlock, StarlighterStyles
 
 app, rt = fast_app(
     pico=False,
-    hdrs=(
-        StarlighterStyles("vscode", "github-dark", "light"),
-        Style(".container { max-width: 1200px; margin: 0 auto; padding: 2rem; }")
-    )
+    hdrs=(StarlighterStyles("vscode"),)
 )
 
 @rt("/")
 def get():
-    code_sample = '''def hello_fasthtml():
-    return "FastHTML compatibility maintained!"'''
-    
     return Div(
-        H1("FastHTML + Starlighter"),
-        CodeBlock(code_sample, theme="vscode"),
+        CodeBlock('print("hello")', theme="vscode"),
         cls="container"
     )
 
 serve()
 ```
 
-## 🌈 Themes
+## Themes
 
-Built-in themes available:
+17 themes are available:
 
-```python
-from starlighter import get_theme_css, CodeBlock
-
-# Available themes
-themes = ["vscode", "light", "github-dark", "monokai", "catppuccin", "dracula"]
-
-# Get CSS for a specific theme
-css = get_theme_css("vscode")
-
-# Use with CodeBlock (StarHTML/FastHTML)
-block = CodeBlock(code, theme="github-dark")
-```
-
-## 📊 Performance
-
-Starlighter delivers exceptional performance optimized for server-side rendering:
-
-### Benchmark Results (Verified)
-
-Based on actual performance measurements:
+| Dark | Light |
+|------|-------|
+| `github-dark` (default) | `github-light` |
+| `vscode-dark` / `vscode` | `vscode-light` |
+| `monokai` | `catppuccin-latte` |
+| `catppuccin-mocha` | `nord-light` |
+| `dracula` | `solarized-light` |
+| `one-dark` | `xcode-light` |
+| `nord-dark` | |
+| `solarized-dark` | |
+| `xcode-dark` | |
 
 ```python
-# Real benchmark results from parser_bench_post2_20250810_212948.json:
-# 200-line files: ~1.5ms P99 latency
-# 500-line files: ~3.0ms P99 latency  
-# 1000-line files: ~6ms P99 latency (estimated)
+from starlighter import get_theme_css
+
+# Get raw CSS for a theme
+css = get_theme_css("monokai")
+
+# Use StarlighterStyles to load multiple themes at once
+StarlighterStyles("github-dark", "monokai", "dracula")
+
+# Auto-switch between themes based on prefers-color-scheme
+StarlighterStyles("github-dark", "github-light", auto_switch=True)
 ```
 
-### Performance Metrics
+## CSS Token Classes
 
-- **P99 Latency**: ~1.5ms for 200-line files, ~3ms for 500-line files  
-- **Cold Start**: <100ms import time
-- **Package Size**: ~200KB installed (actual measured size)
-- **Memory Usage**: <50MB peak for large files
-- **Dependencies**: Zero external dependencies
+| Class | Tokens |
+|-------|--------|
+| `.token-keyword` | `def`, `class`, `if`, `for`, `return`, ... |
+| `.token-string` | `"text"`, `'text'`, `f"..."` |
+| `.token-comment` | `# ...`, docstrings |
+| `.token-number` | `42`, `3.14`, `0xFF` |
+| `.token-operator` | `+`, `-`, `==`, `!=` |
+| `.token-identifier` | Variable and function names |
+| `.token-builtin` | `print`, `len`, `str`, `range`, ... |
+| `.token-decorator` | `@app.route`, `@property` |
+| `.token-punctuation` | `()`, `[]`, `{}`, `,`, `:` |
+| `.token-starhtml-element` | `Div`, `Button`, `Input`, ... |
+| `.token-datastar-attr` | `data_on_click`, `data_bind`, ... |
+| `.token-signal` | Signal variable references |
+| `.token-css-class` | Strings passed to `cls=`, `data_class=` |
+| `.token-css-style` | Strings passed to `style=`, `data_style=` |
 
-### Performance Comparison
-
-Independent benchmarking shows Starlighter achieves:
-- **Sub-millisecond** highlighting for typical code blocks (100-200 lines)
-- **Consistent performance** with minimal variance across runs
-- **Zero memory leaks** - stateless operation with automatic cleanup
-
-## 🔒 Security
-
-Starlighter prioritizes security with XSS-safe output:
-
-```python
-# Potentially dangerous input
-malicious_code = '''def hack():
-    return "</pre><script>alert('XSS')</script><pre>"'''
-
-# Starlighter safely encodes everything
-safe_html = highlight(malicious_code)
-# Output: <span class="token-string">"&lt;/pre&gt;&lt;script&gt;alert('XSS')&lt;/script&gt;&lt;pre&gt;"</span>
-```
-
-## 📚 API Documentation
-
-### Core Functions
+## API
 
 ```python
 from starlighter import highlight, CodeBlock, StarlighterStyles, get_theme_css
 
-# Basic highlighting
-highlight(code: str, language: str = "python") -> str
+highlight(
+    code: str,
+    language: str | None = "python",
+    elements: set[str] | None = None,
+    attrs: set[str] | None = None,
+    signals: set[str] | None = None,
+) -> str
 
-# StarHTML/FastHTML component (requires framework)
 CodeBlock(code: str, theme: str = "github-dark", **kwargs) -> Component
 
-# Multiple theme styles (requires framework) 
 StarlighterStyles(*themes: str, auto_switch: bool = False, **kwargs) -> Style
 
-# Get theme CSS
-get_theme_css(theme_name: str) -> str
+get_theme_css(theme: str = "github-dark") -> str
 ```
 
-### Error Handling
+## Security
+
+All input is HTML-entity-encoded before output. Script injection via code input is not possible:
 
 ```python
-from starlighter import highlight, InputError, ParseError, RenderError
-
-try:
-    html = highlight(user_code)
-except InputError as e:
-    print(f"Invalid input: {e}")
-except ParseError as e:
-    print(f"Parse error: {e}")  
-except RenderError as e:
-    print(f"Render error: {e}")
+code = 'return "</pre><script>alert(1)</script><pre>"'
+html = highlight(code)
+# Scripts are escaped: &lt;script&gt;alert(1)&lt;/script&gt;
 ```
 
-## 🎨 CSS Classes
-
-Starlighter uses semantic CSS classes for flexible theming:
-
-| Class | Usage |
-|-------|-------|
-| `.token-keyword` | Keywords: `def`, `class`, `if`, `for` |
-| `.token-string` | String literals: `"text"`, `'text'`, `f"text"` |
-| `.token-comment` | Comments and docstrings |
-| `.token-number` | Numeric literals: `42`, `3.14`, `0xFF` |
-| `.token-operator` | Operators: `+`, `-`, `==`, `!=` |
-| `.token-identifier` | Variable and function names |
-| `.token-builtin` | Built-in functions: `print`, `len`, `str` |
-| `.token-punctuation` | Punctuation: `()`, `[]`, `{}`, `,` |
-
-## 🛠️ Development
-
-### Setup
+## Development
 
 ```bash
 git clone https://github.com/banditburai/starlighter.git
 cd starlighter
-
-# Using uv (recommended)
 uv sync --all-extras
-
-# Run tests
 uv run pytest tests/ -v --cov=starlighter
-
-# Run linting  
-uv run ruff check
-uv run ruff format --check
+uv run ruff check && uv run ruff format --check
 ```
 
-### Running Examples
+## Links
 
-```bash
-# StarHTML example (primary)
-cd examples/starhtml_example_project/
-uv run python app.py
-
-```
-
-## 🔗 Links
-
-- **StarHTML**: https://github.com/banditburai/starHTML  
-- **PyPI**: https://pypi.org/project/starlighter/
-- **GitHub**: https://github.com/banditburai/starlighter
-
----
-
-**Built with ❤️ for the StarHTML community**
+- [StarHTML](https://github.com/banditburai/starHTML)
+- [PyPI](https://pypi.org/project/starlighter/)
+- [GitHub](https://github.com/banditburai/starlighter)

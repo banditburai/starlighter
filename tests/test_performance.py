@@ -370,26 +370,25 @@ class StressTests(PerformanceTestCase):
 class HotPathValidationTests(PerformanceTestCase):
     """Validate performance of hot paths (most frequently executed code)."""
 
-    def test_character_advancement_performance(self):
-        """Test the performance of character advancement (hot path)."""
-        lexer = PythonLexer("a" * 10000)  # 10k character string
+    def test_identifier_heavy_performance(self):
+        """Test highlighting performance on identifier-heavy input (hot path)."""
+        code = " ".join(["identifier"] * 1000)
 
-        def advance_all():
-            while not lexer.is_at_end():
-                lexer.advance()
+        def highlight_identifiers():
+            return PythonLexer(code).highlight_streaming()
 
-        duration, _ = self.measure_time(advance_all)
+        duration, html = self.measure_time(highlight_identifiers)
 
-        print(f"Character advancement (10k chars): {duration * 1000:.3f}ms")
+        print(f"Identifier-heavy highlighting (1k tokens): {duration * 1000:.3f}ms")
+        self.assertIn("token-identifier", html)
 
-        # Character advancement should be very fast (allow more time in CI)
         import os
 
-        threshold = 0.020 if os.getenv("CI") else 0.010  # 20ms in CI, 10ms locally
+        threshold = 0.020 if os.getenv("CI") else 0.010
         self.assertLess(
             duration,
             threshold,
-            f"Character advancement should be under {threshold * 1000:.0f}ms",
+            f"Identifier-heavy highlighting should be under {threshold * 1000:.0f}ms",
         )
 
     def test_simple_snippet_throughput(self):

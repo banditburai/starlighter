@@ -9,7 +9,12 @@ app, rt = star_app(
     hdrs=(
         # Include all themes for the interactive editor demo
         StarlighterStyles(
-            "github-dark", "light", "monokai", "catppuccin", "vscode", "dracula"
+            "github-dark",
+            "github-light",
+            "monokai",
+            "catppuccin-mocha",
+            "vscode",
+            "dracula",
         ),
         Style("""
             /* Additional app-specific styles */
@@ -292,16 +297,17 @@ app, rt = star_app()
 
 @rt("/")
 def get():
-    return Titled("StarHTML Example",
-        P("Hello from StarHTML with Datastar!"),
-        Button("Click me",
-               ds_on_click("@post('/clicked')"))
+    return Div(
+        H1("Hello StarHTML!"),
+        P("Welcome to your reactive web app."),
+        Button(
+            "Click me",
+            data_on_click=count.add(1),
+            cls="px-4 py-2 bg-blue-500 text-white rounded"
+        ),
+        Span(data_text=count, cls="text-2xl font-bold"),
+        (count := Signal("count", 0)),
     )
-
-@rt("/clicked", methods=["POST"])
-def post():
-    return P("Button was clicked!",
-             style="color: green;")
 
 serve()""",
     "datastar_example": """from starhtml import *
@@ -310,19 +316,36 @@ app, rt = star_app()
 
 @rt("/")
 def get():
-    return Titled("Datastar Reactivity",
+    return Div(
+        # Define signals inline with walrus operator
+        (message := Signal("message", "")),
+        (count := Signal("count", 0)),
+        
+        # Bind input to signal
+        Input(
+            type="text",
+            placeholder="Type something...",
+            data_bind=message,
+            cls="w-full p-2 border"
+        ),
+        
+        # Reactive text display
+        P("You typed: ", Span(data_text=message, cls="font-bold")),
+        
+        # Reactive counter with button
+        Button(
+            "Increment",
+            data_on_click=count.add(1),
+            cls="px-4 py-2 bg-green-500"
+        ),
+        Span(" Count: ", data_text=count),
+        
+        # Conditional visibility
         Div(
-            Input(
-                type="text",
-                placeholder="Type something...",
-                ds_bind("message")
-            ),
-            P("You typed: ",
-              Span(ds_text("$message"))),
-            Button("Clear",
-                   ds_on_click("$message=''")),
-            ds_signals(message="")
-        )
+            "Message is not empty!",
+            data_show=message.length > 0,
+            cls="text-green-600 mt-2"
+        ),
     )
 
 serve()""",
@@ -743,10 +766,12 @@ def get():
         ),
         Div(
             Section(H2("GitHub Dark (Default)"), CodeBlock(sample_code)),
-            Section(H2("VS Code Light+"), CodeBlock(sample_code, theme="light")),
-            Section(H2("VS Code Dark+"), CodeBlock(sample_code, theme="vscode")),
+            Section(H2("GitHub Light"), CodeBlock(sample_code, theme="github-light")),
+            Section(H2("VS Code Dark"), CodeBlock(sample_code, theme="vscode")),
             Section(H2("Monokai"), CodeBlock(sample_code, theme="monokai")),
-            Section(H2("Catppuccin Mocha"), CodeBlock(sample_code, theme="catppuccin")),
+            Section(
+                H2("Catppuccin Mocha"), CodeBlock(sample_code, theme="catppuccin-mocha")
+            ),
             Section(H2("Dracula"), CodeBlock(sample_code, theme="dracula")),
             Section(
                 H2("Custom Styling Example"),
