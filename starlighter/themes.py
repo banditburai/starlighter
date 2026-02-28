@@ -36,6 +36,8 @@ BASE_CSS = """
 
 .token-keyword { color: var(--token-keyword); }
 .token-string { color: var(--token-string); }
+.token-css-class { color: var(--token-css-class); font-weight: 500; }
+.token-css-style { color: var(--token-css-style); font-style: italic; }
 .token-comment { color: var(--token-comment); font-style: italic; }
 .token-number { color: var(--token-number); }
 .token-operator { color: var(--token-operator); }
@@ -43,6 +45,9 @@ BASE_CSS = """
 .token-builtin { color: var(--token-builtin); }
 .token-decorator { color: var(--token-decorator); }
 .token-punctuation { color: var(--token-punctuation); }
+.token-starhtml-element { color: var(--token-starhtml-element); font-weight: bold; }
+.token-datastar-attr { color: var(--token-datastar-attr); }
+.token-signal { color: var(--token-signal); font-weight: bold; }
 
 .code-container::-webkit-scrollbar {
     height: 8px;
@@ -68,6 +73,7 @@ THEMES = {
         "--code-bg": "#0d1117",
         "--code-color": "#c9d1d9",
         "--code-border": "#30363d",
+        # Standard tokens - original GitHub dark colors
         "--token-keyword": "#ff7b72",
         "--token-string": "#a5d6ff",
         "--token-comment": "#8b949e",
@@ -77,6 +83,12 @@ THEMES = {
         "--token-builtin": "#ffa657",
         "--token-decorator": "#d2a8ff",
         "--token-punctuation": "#c9d1d9",
+        # StarHTML tokens - Catppuccin Mocha pastel palette
+        "--token-starhtml-element": "#a6e3a1",  # green
+        "--token-datastar-attr": "#cba6f7",  # mauve
+        "--token-css-class": "#94e2d5",  # teal
+        "--token-css-style": "#f38ba8",  # pink
+        "--token-signal": "#fab387",  # peach
         "--scrollbar-track": "#0d1117",
         "--scrollbar-thumb": "#30363d",
         "--scrollbar-thumb-hover": "#484f58",
@@ -85,15 +97,22 @@ THEMES = {
         "--code-bg": "#ffffff",
         "--code-color": "#24292e",
         "--code-border": "#e1e4e8",
+        # Standard tokens - original GitHub light colors
         "--token-keyword": "#d73a49",
         "--token-string": "#032f62",
-        "--token-comment": "#6f42c1",
+        "--token-comment": "#6e7781",
         "--token-number": "#005cc5",
         "--token-operator": "#24292e",
         "--token-identifier": "#6f42c1",
         "--token-builtin": "#e36209",
         "--token-decorator": "#6f42c1",
         "--token-punctuation": "#24292e",
+        # StarHTML tokens - Catppuccin Latte pastel palette
+        "--token-starhtml-element": "#40a02b",  # green
+        "--token-datastar-attr": "#8839ef",  # mauve
+        "--token-css-class": "#179299",  # teal
+        "--token-css-style": "#d20f39",  # red
+        "--token-signal": "#fe640b",  # peach
         "--scrollbar-track": "#ffffff",
         "--scrollbar-thumb": "#e1e4e8",
         "--scrollbar-thumb-hover": "#c8e1ff",
@@ -104,6 +123,8 @@ THEMES = {
         "--code-border": "#e1e8ed",
         "--token-keyword": "#0000ff",
         "--token-string": "#a31515",
+        "--token-css-class": "#e36209",
+        "--token-css-style": "#9a5215",
         "--token-comment": "#008000",
         "--token-number": "#098658",
         "--token-operator": "#000000",
@@ -111,6 +132,9 @@ THEMES = {
         "--token-builtin": "#267f99",
         "--token-decorator": "#795e26",
         "--token-punctuation": "#000000",
+        "--token-starhtml-element": "#098658",
+        "--token-datastar-attr": "#af00db",
+        "--token-signal": "#af00db",
         "--scrollbar-track": "#f6f8fa",
         "--scrollbar-thumb": "#d1d5da",
         "--scrollbar-thumb-hover": "#a8b1bb",
@@ -128,6 +152,9 @@ THEMES = {
         "--token-builtin": "#4ec9b0",
         "--token-decorator": "#dcdcaa",
         "--token-punctuation": "#d4d4d4",
+        "--token-starhtml-element": "#4ec9b0",
+        "--token-datastar-attr": "#9cdcfe",
+        "--token-signal": "#dcdcaa",
         "--scrollbar-track": "#1e1e1e",
         "--scrollbar-thumb": "#4a5568",
         "--scrollbar-thumb-hover": "#718096",
@@ -145,27 +172,14 @@ THEMES = {
         "--token-builtin": "#267f99",
         "--token-decorator": "#795e26",
         "--token-punctuation": "#000000",
+        "--token-starhtml-element": "#098658",
+        "--token-datastar-attr": "#001080",
+        "--token-signal": "#af00db",
         "--scrollbar-track": "#ffffff",
         "--scrollbar-thumb": "#e5e5e5",
         "--scrollbar-thumb-hover": "#c8c8c8",
     },
-    "vscode": {
-        "--code-bg": "#1e1e1e",
-        "--code-color": "#d4d4d4",
-        "--code-border": "#4a5568",
-        "--token-keyword": "#569cd6",
-        "--token-string": "#ce9178",
-        "--token-comment": "#6a9955",
-        "--token-number": "#b5cea8",
-        "--token-operator": "#d4d4d4",
-        "--token-identifier": "#9cdcfe",
-        "--token-builtin": "#4ec9b0",
-        "--token-decorator": "#dcdcaa",
-        "--token-punctuation": "#d4d4d4",
-        "--scrollbar-track": "#1e1e1e",
-        "--scrollbar-thumb": "#4a5568",
-        "--scrollbar-thumb-hover": "#718096",
-    },
+    "vscode": None,  # Alias for vscode-dark, set after dict creation
     "monokai": {
         "--code-bg": "#272822",
         "--code-color": "#f8f8f2",
@@ -179,6 +193,9 @@ THEMES = {
         "--token-builtin": "#66d9ef",
         "--token-decorator": "#f92672",
         "--token-punctuation": "#f8f8f2",
+        "--token-starhtml-element": "#a6e22e",
+        "--token-datastar-attr": "#66d9ef",
+        "--token-signal": "#e6db74",
         "--scrollbar-track": "#272822",
         "--scrollbar-thumb": "#4a5568",
         "--scrollbar-thumb-hover": "#718096",
@@ -196,6 +213,9 @@ THEMES = {
         "--token-builtin": "#8be9fd",
         "--token-decorator": "#ff79c6",
         "--token-punctuation": "#f8f8f2",
+        "--token-starhtml-element": "#50fa7b",
+        "--token-datastar-attr": "#8be9fd",
+        "--token-signal": "#ffb86c",
         "--scrollbar-track": "#282a36",
         "--scrollbar-thumb": "#44475a",
         "--scrollbar-thumb-hover": "#6272a4",
@@ -213,6 +233,9 @@ THEMES = {
         "--token-builtin": "#e06c75",
         "--token-decorator": "#c678dd",
         "--token-punctuation": "#abb2bf",
+        "--token-starhtml-element": "#98c379",
+        "--token-datastar-attr": "#61afef",
+        "--token-signal": "#e5c07b",
         "--scrollbar-track": "#282c34",
         "--scrollbar-thumb": "#3e4451",
         "--scrollbar-thumb-hover": "#5c6370",
@@ -230,6 +253,9 @@ THEMES = {
         "--token-builtin": "#4eb0cc",
         "--token-decorator": "#ff7ab2",
         "--token-punctuation": "#ffffff",
+        "--token-starhtml-element": "#5cefa2",
+        "--token-datastar-attr": "#6bdfff",
+        "--token-signal": "#ffd666",
         "--scrollbar-track": "#1f1f24",
         "--scrollbar-thumb": "#3a3a3f",
         "--scrollbar-thumb-hover": "#5a5a5f",
@@ -247,6 +273,9 @@ THEMES = {
         "--token-builtin": "#23575c",
         "--token-decorator": "#ad3da4",
         "--token-punctuation": "#000000",
+        "--token-starhtml-element": "#0a7a3a",
+        "--token-datastar-attr": "#3f6e75",
+        "--token-signal": "#d12f1b",
         "--scrollbar-track": "#ffffff",
         "--scrollbar-thumb": "#e5e5e5",
         "--scrollbar-thumb-hover": "#c8c8c8",
@@ -264,6 +293,9 @@ THEMES = {
         "--token-builtin": "#f9e2af",
         "--token-decorator": "#f5c2e7",
         "--token-punctuation": "#cdd6f4",
+        "--token-starhtml-element": "#a6e3a1",
+        "--token-datastar-attr": "#89dceb",
+        "--token-signal": "#f9e2af",
         "--scrollbar-track": "#1e1e2e",
         "--scrollbar-thumb": "#45475a",
         "--scrollbar-thumb-hover": "#6c7086",
@@ -281,6 +313,9 @@ THEMES = {
         "--token-builtin": "#df8e1d",
         "--token-decorator": "#ea76cb",
         "--token-punctuation": "#4c4f69",
+        "--token-starhtml-element": "#40a02b",
+        "--token-datastar-attr": "#179299",
+        "--token-signal": "#df8e1d",
         "--scrollbar-track": "#eff1f5",
         "--scrollbar-thumb": "#bcc0cc",
         "--scrollbar-thumb-hover": "#9ca0b0",
@@ -298,6 +333,9 @@ THEMES = {
         "--token-builtin": "#d08770",
         "--token-decorator": "#5e81ac",
         "--token-punctuation": "#d8dee9",
+        "--token-starhtml-element": "#a3be8c",
+        "--token-datastar-attr": "#88c0d0",
+        "--token-signal": "#ebcb8b",
         "--scrollbar-track": "#2e3440",
         "--scrollbar-thumb": "#3b4252",
         "--scrollbar-thumb-hover": "#434c5e",
@@ -315,6 +353,9 @@ THEMES = {
         "--token-builtin": "#d08770",
         "--token-decorator": "#81a1c1",
         "--token-punctuation": "#2e3440",
+        "--token-starhtml-element": "#8fbcbb",
+        "--token-datastar-attr": "#88c0d0",
+        "--token-signal": "#d08770",
         "--scrollbar-track": "#eceff4",
         "--scrollbar-thumb": "#d8dee9",
         "--scrollbar-thumb-hover": "#c8d2e3",
@@ -332,6 +373,9 @@ THEMES = {
         "--token-builtin": "#cb4b16",
         "--token-decorator": "#6c71c4",
         "--token-punctuation": "#839496",
+        "--token-starhtml-element": "#859900",
+        "--token-datastar-attr": "#2aa198",
+        "--token-signal": "#b58900",
         "--scrollbar-track": "#002b36",
         "--scrollbar-thumb": "#073642",
         "--scrollbar-thumb-hover": "#586e75",
@@ -349,23 +393,24 @@ THEMES = {
         "--token-builtin": "#cb4b16",
         "--token-decorator": "#6c71c4",
         "--token-punctuation": "#657b83",
+        "--token-starhtml-element": "#859900",
+        "--token-datastar-attr": "#2aa198",
+        "--token-signal": "#b58900",
         "--scrollbar-track": "#fdf6e3",
         "--scrollbar-thumb": "#eee8d5",
         "--scrollbar-thumb-hover": "#d7d0b8",
     },
 }
+THEMES["vscode"] = THEMES["vscode-dark"]
 
-DARK_SELECTORS = [
-    ".dark",
-    "[data-theme='dark']",
-]
+DARK_SELECTORS = (".dark", "[data-theme='dark']")
 
 
-def _css_vars(theme_dict):
+def _css_vars(theme_dict: dict[str, str]) -> str:
     return "\n    ".join(f"{k}: {v};" for k, v in theme_dict.items())
 
 
-def _wrap_vars(selector, theme):
+def _wrap_vars(selector: str, theme: str) -> str:
     return f"{selector} {{\n    {_css_vars(THEMES[theme])}\n}}"
 
 
@@ -379,17 +424,20 @@ def get_theme_css(theme="github-dark"):
 
 def StarlighterStyles(*themes, auto_switch=False, **kwargs):
     themes = themes or ("github-dark",)
-    default, alt = themes[0], themes[1] if len(themes) > 1 else None
 
-    for theme in (default, alt):
-        if theme and theme not in THEMES:
+    for theme in themes:
+        if theme not in THEMES:
             raise ValueError(
                 f"Unknown theme '{theme}'. Available themes: {list(THEMES.keys())}"
             )
 
-    css = [BASE_CSS, _wrap_vars(":root", default)]
-    if auto_switch and alt:
-        css.extend(_wrap_vars(sel, alt) for sel in DARK_SELECTORS)
+    css = [BASE_CSS, _wrap_vars(":root", themes[0])]
+
+    for theme in themes[1:]:
+        css.append(_wrap_vars(f".theme-{theme}", theme))
+
+    if auto_switch and len(themes) > 1:
+        css.extend(_wrap_vars(sel, themes[1]) for sel in DARK_SELECTORS)
 
     try:
         from starhtml.tags import Style
